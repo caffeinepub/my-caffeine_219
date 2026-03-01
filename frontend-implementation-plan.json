@@ -1,0 +1,28 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "Change '确认' button text color to black",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "summary": "Change the text color of all '确认' (Confirm) buttons throughout the application to black (#000000 or text-black)",
+      "acceptanceCriteria": [
+        "All '确认' button labels render in black text across every modal and form in the application.",
+        "The change applies consistently in UploadPasscodeModal, DeletePasscodeModal, and any other component containing a '确认' button.",
+        "No other button styles or colors are affected."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/UploadPasscodeModal.tsx",
+          "operation": "modify",
+          "description": "Modify the '确认' button in UploadPasscodeModal to apply text-black class or inline style color: '#000000' to the button text, ensuring the text renders in black while preserving all other button styles (background, border, padding, etc.)."
+        },
+        {
+          "path": "frontend/src/components/DeletePasscodeModal.tsx",
+          "operation": "modify",
+          "description": "Modify the '确认' button in DeletePasscodeModal to apply text-black class or inline style color: '#000000' to the button text, ensuring the text renders in black while preserving all other button styles (background, border, padding, etc.)."
+        }
+      ]
+    }
+  ]
+}

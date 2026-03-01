@@ -1,0 +1,37 @@
+{
+  "kind": "build_request",
+  "title": "Change '确认' button text color to black",
+  "priority": "normal",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "text": "Change the text color of all '确认' (Confirm) buttons throughout the application to black (#000000 or text-black).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-latest"
+        ],
+        "quotes": [
+          "把：确认 这个字改成黑色"
+        ]
+      },
+      "acceptanceCriteria": [
+        "All '确认' button labels render in black text across every modal and form in the application.",
+        "The change applies consistently in UploadPasscodeModal, DeletePasscodeModal, and any other component containing a '确认' button.",
+        "No other button styles or colors are affected."
+      ]
+    }
+  ],
+  "constraints": [
+    "Do not modify any files under frontend/src/hooks/ or frontend/src/components/ui.",
+    "Only change the text color of '确认' labels; do not alter button background, border, or other styles."
+  ],
+  "nonGoals": [
+    "Changing any other text or button colors beyond '确认'.",
+    "Modifying backend logic."
+  ],
+  "imageRequirements": {
+    "required": [],
+    "edits": []
+  }
+}

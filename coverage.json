@@ -1,0 +1,40 @@
+{
+  "kind": "coverage_report",
+  "version": "1.0",
+  "generatedAt": "2026-03-01T17:56:00.106Z",
+  "sources": {
+    "buildRequest": true,
+    "implementationPlan": true
+  },
+  "requirements": {
+    "total": 1,
+    "implemented": 1,
+    "items": [
+      {
+        "id": "REQ-1",
+        "summary": "Change the text color of all '确认' (Confirm) buttons throughout the application to black (#000000 or text-black).",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/UploadPasscodeModal.tsx",
+          "frontend/src/components/DeletePasscodeModal.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/UploadPasscodeModal.tsx",
+          "frontend/src/components/DeletePasscodeModal.tsx"
+        ]
+      }
+    ]
+  },
+  "changedFiles": [
+    "build-request.json",
+    "feature_evidence.json",
+    "frontend-file-summaries.txt",
+    "frontend-implementation-plan.json",
+    "frontend/src/components/DeletePasscodeModal.tsx",
+    "frontend/src/components/UploadPasscodeModal.tsx",
+    "project_state.json",
+    "scratch/component-selection.json",
+    "spec.md",
+    "spec_vs_diff_report.json"
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "kind": "feature_evidence_report",
+  "features": [
+    {
+      "featureId": "feature-change-the-text-color-of-all-confirm-buttons-throughout-the-application-to-black-000000-or-text-black",
+      "featureTitle": "Change the text color of all '确认' (Confirm) buttons throughout the application to black (#000000 or text-black).",
+      "files": [
+        "frontend/src/components/DeletePasscodeModal.tsx",
+        "frontend/src/components/UploadPasscodeModal.tsx"
+      ],
+      "components": [
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0"
+      ],
+      "testIds": [
+        "REQ-1"
+      ],
+      "confidence": "high"
+    }
+  ]
+}
