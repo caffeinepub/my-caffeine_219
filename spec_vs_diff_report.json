@@ -1,15 +1,71 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-03-01T17:56:00.103Z",
-  "summary": "The diff modifies DeletePasscodeModal.tsx and UploadPasscodeModal.tsx to add 'text-black' to the '确认' button classes. Both target components are updated consistently. No other button styles appear altered. The implementation satisfies REQ-1 for the two explicitly named modals. No hallucinated features detected.",
-  "missing_requirements": [],
-  "hallucinated_features": [],
-  "confidence": 0.93,
+  "generatedAt": "2026-03-01T17:23:34.848Z",
+  "summary": "The diff addresses all four requirements (REQ-59 through REQ-63) to varying degrees. REQ-59 is partially implemented — the backend/main.mo still contains AccessControl imports, admin/user authorization guards on profile functions, and the truncated diff shows authorization checks remaining. REQ-60, REQ-61, REQ-62, and REQ-63 appear largely implemented in the frontend hooks and components, but several specific functions are missing proper handling due to truncation. Key concerns: backend still has AccessControl infrastructure and guards on non-mutating functions; deleteManuscript returns bare unit not a Result type; updateFamilyHistory mutation does not check ok/err variant.",
+  "missing_requirements": [
+    {
+      "id": "REQ-59",
+      "requirement": "Remove every admin-only and user-only authorization guard from all mutating functions. No function may reject a call based on caller principal or role.",
+      "reason": "backend/main.mo still imports and uses AccessControl, MixinAuthorization, and contains Runtime.trap('Unauthorized') guards in getCallerUserProfile, getUserProfile, and saveCallerUserProfile. The truncated diff does not confirm all listed mutating functions are free of authorization checks.",
+      "evidence": [
+        "backend/main.mo"
+      ]
+    },
+    {
+      "id": "REQ-60",
+      "requirement": "deleteManuscript must return an explicit Result<T, Text> or typed variant (#ok(T)/#err(Text)).",
+      "reason": "In the diff, deleteManuscript is shown returning async () (bare unit), not a Result type. The frontend hook for useDeleteManuscript also does not check #ok/#err, consistent with a bare return.",
+      "evidence": [
+        "backend/main.mo",
+        "frontend/src/hooks/useQueries.ts"
+      ]
+    },
+    {
+      "id": "REQ-60",
+      "requirement": "updateFamilyHistory must return an explicit Result<T, Text> or typed variant.",
+      "reason": "The useUpdateFamilyHistory mutation in useQueries.ts calls actor.updateFamilyHistory(content) and simply awaits it without checking #ok/#err, implying the backend returns a bare value rather than a Result variant.",
+      "evidence": [
+        "frontend/src/hooks/useQueries.ts"
+      ]
+    },
+    {
+      "id": "REQ-61",
+      "requirement": "useDeleteManuscript mutationFn must await the actor call, check for the #ok arm, and throw on #err.",
+      "reason": "useDeleteManuscript's mutationFn only awaits actor.deleteManuscript(id) without checking any #ok/#err variant, meaning it does not handle the Result pattern as required.",
+      "evidence": [
+        "frontend/src/hooks/useQueries.ts"
+      ]
+    },
+    {
+      "id": "REQ-61",
+      "requirement": "useUpdateFamilyHistory mutationFn must await the actor call, check for the #ok arm, and throw on #err.",
+      "reason": "useUpdateFamilyHistory's mutationFn calls await actor.updateFamilyHistory(content) without checking #ok/#err variant or throwing on #err.",
+      "evidence": [
+        "frontend/src/hooks/useQueries.ts"
+      ]
+    }
+  ],
+  "hallucinated_features": [
+    {
+      "description": "useGetAdminNotes hook imported and used in ContactClan.tsx",
+      "reason": "REQ-63 specifies a useAddHelpRequestNote mutation and displaying adminNote per help request row, but does not specify a separate useGetAdminNotes hook. This hook appears to have been added beyond what was requested.",
+      "evidence": [
+        "frontend/src/components/ContactClan.tsx"
+      ]
+    }
+  ],
+  "confidence": 0.62,
   "changed_files": [
+    "backend/main.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/components/DeletePasscodeModal.tsx",
-    "frontend/src/components/UploadPasscodeModal.tsx",
+    "frontend/src/components/AncientManuscripts.tsx",
+    "frontend/src/components/ContactClan.tsx",
+    "frontend/src/components/FamilyHistory.tsx",
+    "frontend/src/components/PeopleDirectory.tsx",
+    "frontend/src/components/PersonForm.tsx",
+    "frontend/src/components/PersonProfile.tsx",
+    "frontend/src/hooks/useQueries.ts",
     "project_state.json"
   ]
 }

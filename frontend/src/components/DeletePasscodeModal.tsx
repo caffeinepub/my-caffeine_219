@@ -110,7 +110,7 @@ export default function DeletePasscodeModal({
             <Button
               type="submit"
               disabled={!passcode || isLoading}
-              className="bg-seal hover:bg-seal/90 font-serif tracking-wider text-black"
+              className="bg-seal hover:bg-seal/90 text-seal-foreground font-serif tracking-wider"
             >
               {isLoading ? (
                 <>

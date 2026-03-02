@@ -1,37 +1,91 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-03-01T17:56:00.106Z",
+  "generatedAt": "2026-03-01T17:23:34.853Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 1,
-    "implemented": 1,
+    "total": 5,
+    "implemented": 3,
     "items": [
       {
-        "id": "REQ-1",
-        "summary": "Change the text color of all '确认' (Confirm) buttons throughout the application to black (#000000 or text-black).",
+        "id": "REQ-59",
+        "summary": "Audit the entire backend/main.mo actor and remove every admin-only and user-only authorization guard from all mutating functions (createPerson, updatePerson, deletePerson, uploadManuscript, deleteManuscript, addPersonMedia, updatePersonPhoto, createPost, addReply, deletePost, deleteReply, createActivity, updateActivity, deleteActivity, uploadActivityImage, deleteActivityImage, createClanContact, updateClanContact, deleteClanContact, createDonationChannel, updateDonationChannel, deleteDonationChannel, submitHelpRequest, updateHelpRequestStatus, deleteHelpRequest, addHelpRequestNote, updateFamilyHistory). No function may reject a call based on caller principal or role. Authorization is handled exclusively by the frontend passcode modals.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-60",
+        "summary": "Ensure every backend update function in backend/main.mo that returns a result has an explicit Candid-typed return signature of the form Result<T, Text> or a typed variant (#ok(T) / #err(Text)). Functions must not return bare untyped values. Specifically verify: createPerson, updatePerson, deletePerson, uploadManuscript, deleteManuscript, addPersonMedia, updatePersonPhoto, addRelationship, deleteRelationship, createPost, addReply, deletePost, deleteReply, createActivity, updateActivity, deleteActivity, uploadActivityImage, deleteActivityImage, createClanContact, updateClanContact, deleteClanContact, createDonationChannel, updateDonationChannel, deleteDonationChannel, submitHelpRequest, updateHelpRequestStatus, deleteHelpRequest, addHelpRequestNote, updateFamilyHistory.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-61",
+        "summary": "Audit and fix all mutation hooks in frontend/src/hooks/useQueries.ts (createPerson, updatePerson, deletePerson, uploadManuscript, deleteManuscript, addPersonMedia, updatePersonPhoto, addRelationship, deleteRelationship, createPost, addReply, deletePost, deleteReply, createActivity, updateActivity, deleteActivity, uploadActivityImage, deleteActivityImage, createClanContact, updateClanContact, deleteClanContact, createDonationChannel, updateDonationChannel, deleteDonationChannel, submitHelpRequest, updateHelpRequestStatus, deleteHelpRequest, addHelpRequestNote, updateFamilyHistory). Each mutationFn must: (1) await the actor call, (2) check for the #ok arm of the returned Candid variant, and (3) throw an Error with the #err message so React Query surfaces failures correctly. Remove any fire-and-forget or unhandled promise patterns.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/UploadPasscodeModal.tsx",
-          "frontend/src/components/DeletePasscodeModal.tsx"
+          "frontend/src/hooks/useQueries.ts"
         ],
         "matchedFiles": [
-          "frontend/src/components/UploadPasscodeModal.tsx",
-          "frontend/src/components/DeletePasscodeModal.tsx"
+          "frontend/src/hooks/useQueries.ts"
+        ]
+      },
+      {
+        "id": "REQ-62",
+        "summary": "After every successful mutation in AncientManuscripts.tsx, FamilyHistory.tsx, PersonForm.tsx, PersonProfile.tsx, PeopleDirectory.tsx, ClanInteraction.tsx, FamilyActivities.tsx, and ContactClan.tsx, invalidate the corresponding React Query cache keys so the UI re-fetches and immediately reflects the new data without requiring a manual page refresh. Cache keys to invalidate must match those used by the corresponding query hooks (e.g., 'manuscripts', 'familyHistory', 'persons', 'relationships', 'posts', 'replies', 'activities', 'activityImages', 'clanContacts', 'donationChannels', 'helpRequests').",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/AncientManuscripts.tsx",
+          "frontend/src/components/FamilyHistory.tsx",
+          "frontend/src/components/PersonForm.tsx",
+          "frontend/src/components/PersonProfile.tsx",
+          "frontend/src/components/PeopleDirectory.tsx",
+          "frontend/src/components/ClanInteraction.tsx",
+          "frontend/src/components/FamilyActivities.tsx",
+          "frontend/src/components/ContactClan.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/AncientManuscripts.tsx",
+          "frontend/src/components/FamilyHistory.tsx",
+          "frontend/src/components/PersonForm.tsx",
+          "frontend/src/components/PersonProfile.tsx",
+          "frontend/src/components/PeopleDirectory.tsx",
+          "frontend/src/components/ContactClan.tsx"
+        ]
+      },
+      {
+        "id": "REQ-63",
+        "summary": "Fix the HelpRequest TypeScript type in frontend/src/hooks/useQueries.ts and the corresponding ContactClan.tsx component to include the optional adminNote field. Ensure the useAddHelpRequestNote mutation hook calls the actor's addHelpRequestNote method, awaits the result, decodes the #ok / #err variant, throws on #err, and invalidates the 'helpRequests' cache key on success. In ContactClan.tsx, display the adminNote on each help request row when present, and provide an inline 'Add Note' form gated behind the UploadPasscodeModal (passcode: 'dsjzscxx').",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/components/ContactClan.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/components/ContactClan.tsx"
         ]
       }
     ]
   },
   "changedFiles": [
+    "backend/main.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/components/DeletePasscodeModal.tsx",
-    "frontend/src/components/UploadPasscodeModal.tsx",
+    "frontend/src/components/AncientManuscripts.tsx",
+    "frontend/src/components/ContactClan.tsx",
+    "frontend/src/components/FamilyHistory.tsx",
+    "frontend/src/components/PeopleDirectory.tsx",
+    "frontend/src/components/PersonForm.tsx",
+    "frontend/src/components/PersonProfile.tsx",
+    "frontend/src/hooks/useQueries.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

@@ -2,11 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-change-the-text-color-of-all-confirm-buttons-throughout-the-application-to-black-000000-or-text-black",
-      "featureTitle": "Change the text color of all '确认' (Confirm) buttons throughout the application to black (#000000 or text-black).",
+      "featureId": "feature-audit-and-fix-all-mutation-hooks-in-frontend-src-hooks-usequeries-ts-createperson-updateperson-deleteperson-uploadmanuscript-deletemanuscript-addpersonmedia-updatepersonphoto-addrelationship-deleterelationship-createpost-addreply-deletepost-deletereply-createactivity-updateactivity-deleteactivity-uploadactivityimage-deleteactivityimage-createclancontact-updateclancontact-deleteclancontact-createdonationchannel-updatedonationchannel-deletedonationchannel-submithelprequest-updatehelprequeststatus-deletehelprequest-addhelprequestnote-updatefamilyhistory-each-mutationfn-must-1-await-the-actor-call-2-check-for-the-ok-arm-of-the-returned-candid-variant-and-3-throw-an-error-with-the-err-message-so-react-query-surfaces-failures-correctly-remove-any-fire-and-forget-or-unhandled-promise-patterns",
+      "featureTitle": "Audit and fix all mutation hooks in frontend/src/hooks/useQueries.ts (createPerson, updatePerson, deletePerson, uploadManuscript, deleteManuscript, addPersonMedia, updatePersonPhoto, addRelationship, deleteRelationship, createPost, addReply, deletePost, deleteReply, createActivity, updateActivity, deleteActivity, uploadActivityImage, deleteActivityImage, createClanContact, updateClanContact, deleteClanContact, createDonationChannel, updateDonationChannel, deleteDonationChannel, submitHelpRequest, updateHelpRequestStatus, deleteHelpRequest, addHelpRequestNote, updateFamilyHistory). Each mutationFn must: (1) await the actor call, (2) check for the #ok arm of the returned Candid variant, and (3) throw an Error with the #err message so React Query surfaces failures correctly. Remove any fire-and-forget or unhandled promise patterns.",
       "files": [
-        "frontend/src/components/DeletePasscodeModal.tsx",
-        "frontend/src/components/UploadPasscodeModal.tsx"
+        "frontend/src/hooks/useQueries.ts"
       ],
       "components": [
         "blob-storage@4.0.0",
@@ -18,7 +17,53 @@
         "authorization@4.0.0"
       ],
       "testIds": [
-        "REQ-1"
+        "REQ-61"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-after-every-successful-mutation-in-ancientmanuscripts-tsx-familyhistory-tsx-personform-tsx-personprofile-tsx-peopledirectory-tsx-claninteraction-tsx-familyactivities-tsx-and-contactclan-tsx-invalidate-the-corresponding-react-query-cache-keys-so-the-ui-re-fetches-and-immediately-reflects-the-new-data-without-requiring-a-manual-page-refresh-cache-keys-to-invalidate-must-match-those-used-by-the-corresponding-query-hooks-e-g-manuscripts-familyhistory-persons-relationships-posts-replies-activities-activityimages-clancontacts-donationchannels-helprequests",
+      "featureTitle": "After every successful mutation in AncientManuscripts.tsx, FamilyHistory.tsx, PersonForm.tsx, PersonProfile.tsx, PeopleDirectory.tsx, ClanInteraction.tsx, FamilyActivities.tsx, and ContactClan.tsx, invalidate the corresponding React Query cache keys so the UI re-fetches and immediately reflects the new data without requiring a manual page refresh. Cache keys to invalidate must match those used by the corresponding query hooks (e.g., 'manuscripts', 'familyHistory', 'persons', 'relationships', 'posts', 'replies', 'activities', 'activityImages', 'clanContacts', 'donationChannels', 'helpRequests').",
+      "files": [
+        "frontend/src/components/AncientManuscripts.tsx",
+        "frontend/src/components/ContactClan.tsx",
+        "frontend/src/components/FamilyHistory.tsx",
+        "frontend/src/components/PeopleDirectory.tsx",
+        "frontend/src/components/PersonForm.tsx",
+        "frontend/src/components/PersonProfile.tsx"
+      ],
+      "components": [
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0"
+      ],
+      "testIds": [
+        "REQ-62"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-fix-the-helprequest-typescript-type-in-frontend-src-hooks-usequeries-ts-and-the-corresponding-contactclan-tsx-component-to-include-the-optional-adminnote-field-ensure-the-useaddhelprequestnote-mutation-hook-calls-the-actor-s-addhelprequestnote-method-awaits-the-result-decodes-the-ok-err-variant-throws-on-err-and-invalidates-the-helprequests-cache-key-on-success-in-contactclan-tsx-display-the-adminnote-on-each-help-request-row-when-present-and-provide-an-inline-add-note-form-gated-behind-the-uploadpasscodemodal-passcode-dsjzscxx",
+      "featureTitle": "Fix the HelpRequest TypeScript type in frontend/src/hooks/useQueries.ts and the corresponding ContactClan.tsx component to include the optional adminNote field. Ensure the useAddHelpRequestNote mutation hook calls the actor's addHelpRequestNote method, awaits the result, decodes the #ok / #err variant, throws on #err, and invalidates the 'helpRequests' cache key on success. In ContactClan.tsx, display the adminNote on each help request row when present, and provide an inline 'Add Note' form gated behind the UploadPasscodeModal (passcode: 'dsjzscxx').",
+      "files": [
+        "frontend/src/components/ContactClan.tsx",
+        "frontend/src/hooks/useQueries.ts"
+      ],
+      "components": [
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0"
+      ],
+      "testIds": [
+        "REQ-63"
       ],
       "confidence": "high"
     }

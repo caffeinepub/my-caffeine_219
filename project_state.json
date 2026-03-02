@@ -1,22 +1,655 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 3,
-  "summary": "New project",
-  "architectural_notes": [],
-  "known_issues": [],
+  "projectStateVersion": 41,
+  "summary": "邓氏家族族谱系统，带访问口令保护（dsjzsdxw），包含五大板块：家族古籍缩影、家族历史、人物整理、族人互动（留言回复+家族活动安排）、联系家族（族长联系方式、族群联系方式、家族求助申请、家族捐赠渠道）",
+  "architectural_notes": [
+    "前端访问口令验证（dsjzsdxw），非 Internet Identity，用于限制特定人群访问",
+    "上传操作需验证口令 dsjzscxx，删除操作需验证口令 dsjzyyxw3344，前端在执行这两类操作前弹出口令输入框",
+    "关系管理通过 relationship_types 和 relationships 两张表实现，添加关系时自动生成双向记录；代数（generation）通过递归关系查询动态计算，不存储固定值"
+  ],
+  "known_issues": [
+    "添加族人时，口令验证正确后未能成功提交/保存人物信息",
+    "家族代数（generation number）可以无限增加，用户可自行设置任意新代数，缺乏限制",
+    "提交族人信息时出现错误：'保存失败：Expected v3 response body'，疑似后端响应格式不匹配",
+    "上传家族古籍成功后，已收录古籍列表中未显示新上传的条目（疑似前端未刷新或查询未更新）",
+    "调用 createPerson 时出现 IC0508 错误：Canister haf5u-eyaaa-aaaan-q3iza-cai is stopped，导致无法新增族人",
+    "创建家族活动时出现错误：'Unauthorized: Only users can create activities'，后端 createActivity 函数存在用户身份验证限制，与项目仅使用前端口令验证的设计不符",
+    "创建族人留言（createPost）时出现错误：'Unauthorized: Only users can create posts'，后端 createPost 函数存在用户身份验证限制，与项目仅使用前端口令验证的设计不符",
+    "createPerson 出现错误：'Unauthorized: Only admins can create persons'，后端 createPerson 函数存在管理员身份验证限制，与项目仅使用前端口令验证的设计不符",
+    "在「联系家族」板块中，上传联系方式信息后未被记录/保存（疑似前端未正确调用后端或响应处理有误）",
+    "家族历史板块点击保存后内容未能成功保存到后端"
+  ],
   "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-change-the-text-color-of-all-confirm-buttons-throughout-the-application-to-black-000000-or-text-black",
-      "title": "Change the text color of all '确认' (Confirm) buttons throughout the application to black (#000000 or text-black).",
+      "id": "feature-implement-a-frontend-passcode-gate-screen-that-appears-before-any-other-content-the-user-must-enter-the-passcode-dsjzsdxw-to-access-the-application-if-the-passcode-is-incorrect-display-an-error-message-and-deny-access-once-the-correct-passcode-is-entered-store-the-authenticated-state-in-sessionstorage-so-the-user-is-not-prompted-again-during-the-same-session",
+      "title": "Implement a frontend passcode gate screen that appears before any other content. The user must enter the passcode 'dsjzsdxw' to access the application. If the passcode is incorrect, display an error message and deny access. Once the correct passcode is entered, store the authenticated state in sessionStorage so the user is not prompted again during the same session.",
       "reqIds": [
         "REQ-1"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-build-the-ancient-manuscripts-frontend-section-section-1-display-a-gallery-list-of-uploaded-genealogy-scan-files-provide-a-file-upload-control-that-accepts-image-files-jpg-png-and-pdf-documents-each-entry-should-show-its-filename-upload-date-and-a-preview-or-download-link-allow-deletion-of-entries",
+      "title": "Build the Ancient Manuscripts frontend section (Section 1). Display a gallery/list of uploaded genealogy scan files. Provide a file upload control that accepts image files (JPG, PNG) and PDF documents. Each entry should show its filename, upload date, and a preview or download link. Allow deletion of entries.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-build-the-family-history-frontend-section-section-2-display-the-saved-family-history-text-content-provide-an-inline-rich-text-wysiwyg-editor-or-a-large-textarea-with-formatting-support-that-allows-users-to-edit-and-save-the-content-changes-must-be-persisted-to-the-backend",
+      "title": "Build the Family History frontend section (Section 2). Display the saved family history text content. Provide an inline rich-text / WYSIWYG editor (or a large textarea with formatting support) that allows users to edit and save the content. Changes must be persisted to the backend.",
+      "reqIds": [
+        "REQ-5"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-build-the-people-directory-frontend-section-section-3-display-a-searchable-filterable-list-of-all-person-entries-provide-a-form-to-add-or-edit-a-person-with-fields-for-full-name-generation-number-selector-father-name-link-mother-name-link-siblings-multi-select-or-free-text-children-multi-select-or-free-text-personal-biography-text-area-profile-photo-upload-and-additional-media-file-uploads-images-and-video-files-display-each-person-s-profile-page-showing-all-their-information-and-uploaded-media",
+      "title": "Build the People Directory frontend section (Section 3). Display a searchable/filterable list of all person entries. Provide a form to add or edit a person with fields for: full name, generation number selector, father name/link, mother name/link, siblings (multi-select or free text), children (multi-select or free text), personal biography text area, profile photo upload, and additional media file uploads (images and video files). Display each person's profile page showing all their information and uploaded media.",
+      "reqIds": [
+        "REQ-7"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-design-and-implement-a-cohesive-visual-theme-for-the-entire-application-use-a-traditional-chinese-heritage-aesthetic-warm-ink-on-paper-tones-cream-aged-parchment-deep-ink-brown-black-classical-calligraphy-style-headings-and-subtle-decorative-motifs-e-g-traditional-border-patterns-the-layout-should-use-a-clear-sidebar-or-top-navigation-with-the-three-main-sections-apply-the-theme-consistently-across-all-pages",
+      "title": "Design and implement a cohesive visual theme for the entire application. Use a traditional Chinese heritage aesthetic — warm ink-on-paper tones (cream, aged parchment, deep ink brown/black), classical calligraphy-style headings, and subtle decorative motifs (e.g., traditional border patterns). The layout should use a clear sidebar or top navigation with the three main sections. Apply the theme consistently across all pages.",
+      "reqIds": [
+        "REQ-8"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-frontend-passcode-prompt-for-upload-operations-across-all-three-sections-ancient-manuscripts-people-directory-before-any-file-or-record-upload-is-submitted-display-a-modal-dialog-asking-the-user-to-enter-the-upload-passcode-dsjzscxx-if-the-passcode-is-incorrect-show-an-error-message-and-block-the-upload-if-correct-proceed-with-the-upload-this-passcode-prompt-must-appear-for-uploading-manuscript-files-uploading-person-profile-photos-uploading-person-media-files-and-creating-new-person-records",
+      "title": "Add a frontend passcode prompt for upload operations across all three sections (Ancient Manuscripts, People Directory). Before any file or record upload is submitted, display a modal/dialog asking the user to enter the upload passcode 'dsjzscxx'. If the passcode is incorrect, show an error message and block the upload. If correct, proceed with the upload. This passcode prompt must appear for: uploading manuscript files, uploading person profile photos, uploading person media files, and creating new person records.",
+      "reqIds": [
+        "REQ-9"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-frontend-passcode-prompt-for-delete-operations-across-all-three-sections-ancient-manuscripts-people-directory-before-any-deletion-is-confirmed-display-a-modal-dialog-asking-the-user-to-enter-the-delete-passcode-dsjzyyxw3344-if-the-passcode-is-incorrect-show-an-error-message-and-block-the-deletion-if-correct-proceed-with-the-deletion-this-passcode-prompt-must-appear-for-deleting-manuscript-entries-deleting-person-records-and-deleting-person-media-files",
+      "title": "Add a frontend passcode prompt for delete operations across all three sections (Ancient Manuscripts, People Directory). Before any deletion is confirmed, display a modal/dialog asking the user to enter the delete passcode 'dsjzyyxw3344'. If the passcode is incorrect, show an error message and block the deletion. If correct, proceed with the deletion. This passcode prompt must appear for: deleting manuscript entries, deleting person records, and deleting person media files.",
+      "reqIds": [
+        "REQ-10"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-rebuild-and-restore-the-complete-frontend-application-including-the-sessionstorage-based-passcode-gate-screen-passcode-dsjzsdxw-the-traditional-chinese-heritage-visual-theme-ink-on-paper-tones-calligraphy-style-headings-decorative-motifs-the-sidebar-top-navigation-with-three-sections-the-ancient-manuscripts-gallery-upload-delete-section-the-family-history-rich-text-editor-section-and-the-people-directory-searchable-list-person-form-and-profile-views",
+      "title": "Rebuild and restore the complete frontend application, including: the sessionStorage-based passcode gate screen (passcode: 'dsjzsdxw'), the traditional Chinese heritage visual theme (ink-on-paper tones, calligraphy-style headings, decorative motifs), the sidebar/top navigation with three sections, the Ancient Manuscripts gallery/upload/delete section, the Family History rich-text editor section, and the People Directory searchable list, person form, and profile views.",
+      "reqIds": [
+        "REQ-12"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-restore-the-upload-passcode-modal-across-all-sections-before-any-file-or-record-upload-is-submitted-manuscript-files-person-profile-photos-person-media-files-new-person-records-display-a-modal-dialog-prompting-for-the-upload-passcode-dsjzscxx-block-the-upload-if-the-passcode-is-incorrect-and-show-an-error-message-proceed-with-the-upload-if-the-passcode-is-correct",
+      "title": "Restore the upload passcode modal across all sections. Before any file or record upload is submitted (manuscript files, person profile photos, person media files, new person records), display a modal dialog prompting for the upload passcode 'dsjzscxx'. Block the upload if the passcode is incorrect and show an error message. Proceed with the upload if the passcode is correct.",
+      "reqIds": [
+        "REQ-13"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-restore-the-delete-passcode-modal-across-all-sections-before-any-deletion-is-confirmed-manuscript-entries-person-records-person-media-files-display-a-modal-dialog-prompting-for-the-delete-passcode-dsjzyyxw3344-block-the-deletion-if-the-passcode-is-incorrect-and-show-an-error-message-proceed-with-the-deletion-if-the-passcode-is-correct",
+      "title": "Restore the delete passcode modal across all sections. Before any deletion is confirmed (manuscript entries, person records, person media files), display a modal dialog prompting for the delete passcode 'dsjzyyxw3344'. Block the deletion if the passcode is incorrect and show an error message. Proceed with the deletion if the passcode is correct.",
+      "reqIds": [
+        "REQ-14"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-the-bug-in-personform-where-after-the-upload-passcode-is-successfully-verified-the-new-person-record-is-not-actually-submitted-saved-to-the-backend-the-form-submission-logic-must-be-corrected-so-that-upon-correct-passcode-entry-the-createperson-or-equivalent-mutation-is-called-with-all-form-field-values-and-the-user-is-navigated-to-the-new-person-s-profile-or-back-to-the-directory-list-upon-success",
+      "title": "Fix the bug in PersonForm where, after the upload passcode is successfully verified, the new person record is not actually submitted/saved to the backend. The form submission logic must be corrected so that upon correct passcode entry the createPerson (or equivalent) mutation is called with all form field values, and the user is navigated to the new person's profile (or back to the directory list) upon success.",
+      "reqIds": [
+        "REQ-15"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-restrict-the-generation-number-field-in-personform-to-a-predefined-bounded-set-of-options-rather-than-allowing-free-form-numeric-input-the-selector-must-only-allow-values-from-1-up-to-a-fixed-maximum-e-g-30-generations-rendered-as-a-dropdown-select-control-users-must-not-be-able-to-type-or-submit-an-arbitrary-generation-number-outside-this-range",
+      "title": "Restrict the generation number (家族代数) field in PersonForm to a predefined, bounded set of options rather than allowing free-form numeric input. The selector must only allow values from 1 up to a fixed maximum (e.g., 30 generations), rendered as a dropdown/select control. Users must not be able to type or submit an arbitrary generation number outside this range.",
+      "reqIds": [
+        "REQ-16"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-investigate-and-fix-the-expected-v3-response-body-error-that-occurs-when-submitting-a-new-person-record-in-personform-this-error-indicates-a-mismatch-between-the-frontend-actor-call-and-the-backend-candid-response-format-audit-the-createperson-and-any-related-update-media-backend-function-signatures-in-backend-main-mo-to-ensure-they-return-properly-typed-candid-responses-audit-the-corresponding-frontend-query-mutation-call-in-usequeries-ts-to-ensure-it-correctly-decodes-the-response-variant-e-g-ok-err-tagged-unions-align-both-sides-so-the-call-succeeds-end-to-end-without-a-response-format-error",
+      "title": "Investigate and fix the 'Expected v3 response body' error that occurs when submitting a new person record in PersonForm. This error indicates a mismatch between the frontend actor call and the backend Candid response format. Audit the createPerson (and any related update/media) backend function signatures in backend/main.mo to ensure they return properly typed Candid responses. Audit the corresponding frontend query/mutation call in useQueries.ts to ensure it correctly decodes the response variant (e.g., #ok / #err tagged unions). Align both sides so the call succeeds end-to-end without a response format error.",
+      "reqIds": [
+        "REQ-17"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-personform-component-to-include-input-fields-for-gender-dropdown-with-options-male-female-other-birth-date-date-picker-or-date-input-death-date-date-picker-or-date-input-optional-country-text-input-province-text-input-city-text-input-and-nationality-text-input-these-fields-must-be-submitted-as-part-of-the-create-and-edit-person-flow-and-passed-to-the-backend-mutation",
+      "title": "Update the PersonForm component to include input fields for: Gender (dropdown with options: Male, Female, Other), Birth Date (date picker or date input), Death Date (date picker or date input, optional), Country (text input), Province (text input), City (text input), and Nationality (text input). These fields must be submitted as part of the create and edit person flow and passed to the backend mutation.",
+      "reqIds": [
+        "REQ-19"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-personprofile-component-to-display-the-new-person-fields-gender-birth-date-death-date-country-province-city-and-nationality-these-values-should-be-shown-in-the-profile-view-alongside-the-existing-fields-when-they-are-present",
+      "title": "Update the PersonProfile component to display the new person fields: gender, birth date, death date, country, province, city, and nationality. These values should be shown in the profile view alongside the existing fields when they are present.",
+      "reqIds": [
+        "REQ-20"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-usequeries-ts-hooks-createperson-mutation-updateperson-mutation-and-person-query-list-query-types-to-include-the-new-person-fields-gender-birthdate-deathdate-country-province-city-and-nationality-ensuring-the-typescript-types-are-consistent-with-the-updated-candid-interface",
+      "title": "Update the useQueries.ts hooks (createPerson mutation, updatePerson mutation, and person query/list query types) to include the new Person fields: gender, birthDate, deathDate, country, province, city, and nationality, ensuring the TypeScript types are consistent with the updated Candid interface.",
+      "reqIds": [
+        "REQ-21"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-usequeries-ts-to-add-typescript-types-for-relationshiptype-a-union-of-the-six-string-literals-father-mother-husband-wife-brother-sister-child-and-a-relationship-record-type-id-person1id-person2id-relationshiptype-createdat-add-a-usegetrelationships-personid-react-query-hook-an-addrelationship-mutation-hook-and-a-deleterelationship-mutation-hook-that-call-the-corresponding-backend-functions",
+      "title": "Update useQueries.ts to add TypeScript types for RelationshipType (a union of the six string literals: 'Father' | 'Mother' | 'Husband' | 'Wife' | 'Brother' | 'Sister' | 'Child') and a Relationship record type (id, person1Id, person2Id, relationshipType, createdAt). Add a useGetRelationships(personId) React Query hook, an addRelationship mutation hook, and a deleteRelationship mutation hook that call the corresponding backend functions.",
+      "reqIds": [
+        "REQ-24"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-relationships-panel-to-the-personprofile-component-this-panel-must-display-all-existing-relationships-for-the-viewed-person-showing-the-related-person-s-name-and-the-relationship-type-in-english-it-must-also-provide-an-add-relationship-form-allowing-the-user-to-select-a-target-person-from-the-existing-people-directory-and-choose-one-of-the-six-relationship-types-from-a-dropdown-submitting-the-form-must-be-gated-behind-the-existing-upload-passcode-modal-passcode-dsjzscxx-deleting-a-relationship-must-be-gated-behind-the-existing-delete-passcode-modal-passcode-dsjzyyxw3344-deleting-one-relationship-must-also-remove-the-paired-inverse-relationship-from-the-other-person-s-profile",
+      "title": "Add a Relationships panel to the PersonProfile component. This panel must display all existing relationships for the viewed person (showing the related person's name and the relationship type in English). It must also provide an 'Add Relationship' form allowing the user to select a target person from the existing people directory and choose one of the six relationship types from a dropdown. Submitting the form must be gated behind the existing upload passcode modal (passcode: 'dsjzscxx'). Deleting a relationship must be gated behind the existing delete passcode modal (passcode: 'dsjzyyxw3344'). Deleting one relationship must also remove the paired inverse relationship from the other person's profile.",
+      "reqIds": [
+        "REQ-25"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-the-bug-in-ancientmanuscripts-where-the-manuscript-gallery-list-does-not-update-after-a-successful-file-upload-after-a-successful-upload-the-react-query-cache-for-the-manuscripts-list-query-must-be-invalidated-so-the-newly-uploaded-entry-appears-immediately-in-the-gallery-without-requiring-a-manual-page-refresh",
+      "title": "Fix the bug in AncientManuscripts where the manuscript gallery list does not update after a successful file upload. After a successful upload, the React Query cache for the manuscripts list query must be invalidated so the newly uploaded entry appears immediately in the gallery without requiring a manual page refresh.",
+      "reqIds": [
+        "REQ-26"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-remove-the-upload-passcode-requirement-for-creating-new-person-records-in-the-people-directory-any-user-who-enters-the-correct-upload-passcode-dsjzscxx-must-be-able-to-submit-a-new-family-member-record-verify-that-the-upload-passcode-modal-is-correctly-wired-to-proceed-with-the-createperson-mutation-upon-correct-passcode-entry-and-that-no-additional-access-restriction-beyond-the-passcode-check-itself-prevents-the-submission-from-reaching-the-backend",
+      "title": "Remove the upload passcode requirement for creating new person records in the People Directory. Any user who enters the correct upload passcode ('dsjzscxx') must be able to submit a new family member record. Verify that the upload passcode modal is correctly wired to proceed with the createPerson mutation upon correct passcode entry, and that no additional access restriction beyond the passcode check itself prevents the submission from reaching the backend.",
+      "reqIds": [
+        "REQ-27"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-audit-and-fix-the-frontend-usequeries-ts-mutation-hooks-that-correspond-to-upload-operations-uploadmanuscript-addpersonmedia-updatepersonphoto-ensure-each-mutation-s-mutationfn-correctly-calls-the-actor-method-awaits-the-result-and-decodes-the-returned-candid-variant-e-g-checks-for-ok-err-if-the-actor-call-returns-a-variant-the-hook-must-handle-both-arms-and-throw-on-err-so-react-query-surfaces-the-error-correctly-remove-any-raw-or-unhandled-promise-patterns-that-could-cause-a-response-body-mismatch",
+      "title": "Audit and fix the frontend useQueries.ts mutation hooks that correspond to upload operations (uploadManuscript, addPersonMedia, updatePersonPhoto). Ensure each mutation's mutationFn correctly calls the actor method, awaits the result, and decodes the returned Candid variant (e.g., checks for #ok / #err). If the actor call returns a variant, the hook must handle both arms and throw on #err so React Query surfaces the error correctly. Remove any raw or unhandled promise patterns that could cause a response-body mismatch.",
+      "reqIds": [
+        "REQ-29"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-child-as-a-selectable-option-in-the-relationship-type-dropdown-in-the-add-relationship-form-within-the-personprofile-relationships-panel-the-dropdown-must-include-all-seven-options-father-mother-husband-wife-brother-sister-and-child-the-child-relationship-type-must-already-exist-in-the-backend-s-predefined-relationship-types-ensure-it-is-wired-correctly-so-that-selecting-child-submits-the-relationship-type-value-child-to-the-addrelationship-mutation-and-the-inverse-relationship-is-automatically-created-child-father-or-mother-depending-on-context-use-child-as-its-own-inverse-if-no-gender-context-is-available-consistent-with-the-existing-backend-inverse-relationship-logic",
+      "title": "Add 'Child' (子女) as a selectable option in the relationship type dropdown in the Add Relationship form within the PersonProfile Relationships panel. The dropdown must include all seven options: Father, Mother, Husband, Wife, Brother, Sister, and Child. The Child relationship type must already exist in the backend's predefined relationship types; ensure it is wired correctly so that selecting 'Child' submits the relationship type value 'Child' to the addRelationship mutation, and the inverse relationship is automatically created (Child → Father or Mother, depending on context — use 'Child' as its own inverse if no gender context is available, consistent with the existing backend inverse-relationship logic).",
+      "reqIds": [
+        "REQ-32"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-frontend-src-hooks-usequeries-ts-to-add-typescript-types-and-react-query-hooks-for-the-new-message-board-backend-functions-add-types-post-id-number-authorname-string-content-string-createdat-bigint-and-reply-id-number-postid-number-authorname-string-content-string-createdat-bigint-add-hooks-uselistposts-query-uselistreplies-postid-query-usecreatepost-mutation-useaddreply-mutation-usedeletepost-mutation-usedeletereply-mutation-each-mutation-s-mutationfn-must-await-the-actor-call-and-handle-the-ok-err-candid-variant-throwing-on-err",
+      "title": "Update frontend/src/hooks/useQueries.ts to add TypeScript types and React Query hooks for the new message board backend functions. Add types: Post { id: number; authorName: string; content: string; createdAt: bigint } and Reply { id: number; postId: number; authorName: string; content: string; createdAt: bigint }. Add hooks: useListPosts() (query), useListReplies(postId) (query), useCreatePost mutation, useAddReply mutation, useDeletePost mutation, useDeleteReply mutation. Each mutation's mutationFn must await the actor call and handle the #ok / #err Candid variant, throwing on #err.",
+      "reqIds": [
+        "REQ-37"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-frontend-src-hooks-usequeries-ts-to-add-typescript-types-and-react-query-hooks-for-the-new-family-activities-backend-functions-add-types-activity-id-number-title-string-eventdate-string-description-string-createdat-bigint-and-activityimage-id-number-activityid-number-filename-string-mimetype-string-data-uint8array-uploadedat-bigint-add-hooks-uselistactivities-query-usegetactivity-id-query-uselistactivityimages-activityid-query-usecreateactivity-mutation-useupdateactivity-mutation-usedeleteactivity-mutation-useuploadactivityimage-mutation-usedeleteactivityimage-mutation-each-mutation-s-mutationfn-must-await-the-actor-call-and-handle-the-ok-err-candid-variant-throwing-on-err",
+      "title": "Update frontend/src/hooks/useQueries.ts to add TypeScript types and React Query hooks for the new Family Activities backend functions. Add types: Activity { id: number; title: string; eventDate: string; description: string; createdAt: bigint } and ActivityImage { id: number; activityId: number; fileName: string; mimeType: string; data: Uint8Array; uploadedAt: bigint }. Add hooks: useListActivities() (query), useGetActivity(id) (query), useListActivityImages(activityId) (query), useCreateActivity mutation, useUpdateActivity mutation, useDeleteActivity mutation, useUploadActivityImage mutation, useDeleteActivityImage mutation. Each mutation's mutationFn must await the actor call and handle the #ok / #err Candid variant, throwing on #err.",
+      "reqIds": [
+        "REQ-38"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-a-new-frontend-component-frontend-src-components-claninteraction-tsx-implementing-the-clan-message-board-sub-section-the-component-must-1-display-a-list-of-posts-in-reverse-chronological-order-each-showing-the-author-name-post-content-creation-date-time-and-a-reply-count-2-provide-an-add-post-form-with-fields-for-author-name-text-input-and-message-content-textarea-submitting-this-form-must-be-gated-behind-the-existing-uploadpasscodemodal-passcode-dsjzscxx-3-allow-expanding-a-post-to-view-its-replies-inline-each-reply-shows-author-name-content-and-timestamp-4-provide-a-reply-form-inline-under-each-post-with-author-name-and-reply-content-fields-submitting-a-reply-must-also-be-gated-behind-the-uploadpasscodemodal-5-deleting-a-post-must-be-gated-behind-the-existing-deletepasscodemodal-passcode-dsjzyyxw3344-deleting-a-post-removes-it-and-all-its-replies-6-deleting-an-individual-reply-must-also-be-gated-behind-the-deletepasscodemodal-apply-the-existing-traditional-chinese-heritage-visual-theme-parchment-tones-ink-typography-seal-red-accents-consistently",
+      "title": "Create a new frontend component frontend/src/components/ClanInteraction.tsx implementing the Clan Message Board sub-section. The component must: (1) Display a list of posts in reverse-chronological order, each showing the author name, post content, creation date/time, and a reply count. (2) Provide an 'Add Post' form with fields for Author Name (text input) and Message Content (textarea); submitting this form must be gated behind the existing UploadPasscodeModal (passcode: 'dsjzscxx'). (3) Allow expanding a post to view its replies inline; each reply shows author name, content, and timestamp. (4) Provide a 'Reply' form inline under each post with Author Name and Reply Content fields; submitting a reply must also be gated behind the UploadPasscodeModal. (5) Deleting a post must be gated behind the existing DeletePasscodeModal (passcode: 'dsjzyyxw3344'); deleting a post removes it and all its replies. (6) Deleting an individual reply must also be gated behind the DeletePasscodeModal. Apply the existing traditional Chinese heritage visual theme (parchment tones, ink typography, seal-red accents) consistently.",
+      "reqIds": [
+        "REQ-39"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-a-new-frontend-component-frontend-src-components-familyactivities-tsx-implementing-the-family-activities-sub-section-the-component-must-1-display-a-list-of-all-family-activities-as-cards-or-table-rows-each-showing-the-activity-title-event-date-and-a-short-description-preview-2-provide-a-form-to-create-a-new-activity-with-fields-title-text-input-event-date-date-input-description-textarea-submitting-must-be-gated-behind-the-existing-uploadpasscodemodal-passcode-dsjzscxx-3-allow-viewing-an-activity-s-detail-view-showing-full-description-and-all-uploaded-images-as-a-gallery-4-within-the-detail-view-provide-an-image-upload-control-accepts-jpg-png-to-upload-activity-photos-submitting-must-be-gated-behind-the-uploadpasscodemodal-5-allow-editing-an-activity-s-title-date-and-description-submitting-edits-must-be-gated-behind-the-uploadpasscodemodal-6-deleting-an-activity-and-all-its-images-must-be-gated-behind-the-existing-deletepasscodemodal-passcode-dsjzyyxw3344-7-deleting-an-individual-activity-image-must-be-gated-behind-the-deletepasscodemodal-apply-the-existing-traditional-chinese-heritage-visual-theme-consistently",
+      "title": "Create a new frontend component frontend/src/components/FamilyActivities.tsx implementing the Family Activities sub-section. The component must: (1) Display a list of all family activities as cards or table rows, each showing the activity title, event date, and a short description preview. (2) Provide a form to create a new activity with fields: Title (text input), Event Date (date input), Description (textarea); submitting must be gated behind the existing UploadPasscodeModal (passcode: 'dsjzscxx'). (3) Allow viewing an activity's detail view showing full description and all uploaded images as a gallery. (4) Within the detail view, provide an image upload control (accepts JPG, PNG) to upload activity photos; submitting must be gated behind the UploadPasscodeModal. (5) Allow editing an activity's title, date, and description; submitting edits must be gated behind the UploadPasscodeModal. (6) Deleting an activity (and all its images) must be gated behind the existing DeletePasscodeModal (passcode: 'dsjzyyxw3344'). (7) Deleting an individual activity image must be gated behind the DeletePasscodeModal. Apply the existing traditional Chinese heritage visual theme consistently.",
+      "reqIds": [
+        "REQ-40"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-fourth-section-clan-interaction-to-the-application-navigation-and-routing-update-frontend-src-components-layout-tsx-to-add-a-fourth-navigation-item-labelled-clan-interaction-alongside-the-existing-three-sections-update-frontend-src-app-tsx-to-handle-the-new-section-state-interaction-rendering-a-container-that-hosts-both-the-claninteraction-message-board-and-familyactivities-components-separated-by-a-clear-section-heading-or-tab-switcher-within-the-page-the-new-section-must-be-reachable-from-the-navigation-bar-and-must-apply-the-same-traditional-chinese-heritage-visual-theme-as-the-other-sections",
+      "title": "Add a fourth section 'Clan Interaction' (族人互动) to the application navigation and routing. Update frontend/src/components/Layout.tsx to add a fourth navigation item labelled 'Clan Interaction / 族人互动' alongside the existing three sections. Update frontend/src/App.tsx to handle the new section state ('interaction'), rendering a container that hosts both the ClanInteraction (message board) and FamilyActivities components, separated by a clear section heading or tab switcher within the page. The new section must be reachable from the navigation bar and must apply the same traditional Chinese heritage visual theme as the other sections.",
+      "reqIds": [
+        "REQ-41"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-frontend-src-hooks-usequeries-ts-to-add-typescript-types-and-react-query-hooks-for-the-new-contact-the-clan-backend-functions-add-types-clancontact-id-number-contacttype-string-name-string-role-string-phone-string-email-string-wechat-string-address-string-notes-string-createdat-bigint-helprequest-id-number-applicantname-string-contactinfo-string-requesttype-string-description-string-status-string-createdat-bigint-donationchannel-id-number-channelname-string-accountname-string-accountnumber-string-bankname-string-wechatpayqr-string-alipayqr-string-instructions-string-createdat-bigint-add-hooks-uselistclancontacts-query-usecreateclancontact-mutation-useupdateclancontact-mutation-usedeleteclancontact-mutation-usesubmithelprequest-mutation-uselisthelprequests-query-useupdatehelprequeststatus-mutation-usedeletehelprequest-mutation-uselistdonationchannels-query-usecreatedonationchannel-mutation-useupdatedonationchannel-mutation-usedeletedonationchannel-mutation-each-mutation-s-mutationfn-must-await-the-actor-call-and-handle-the-ok-err-candid-variant-throwing-on-err",
+      "title": "Update frontend/src/hooks/useQueries.ts to add TypeScript types and React Query hooks for the new Contact the Clan backend functions. Add types: ClanContact { id: number; contactType: string; name: string; role: string; phone?: string; email?: string; wechat?: string; address?: string; notes?: string; createdAt: bigint }, HelpRequest { id: number; applicantName: string; contactInfo: string; requestType: string; description: string; status: string; createdAt: bigint }, DonationChannel { id: number; channelName: string; accountName?: string; accountNumber?: string; bankName?: string; wechatPayQr?: string; alipayQr?: string; instructions?: string; createdAt: bigint }. Add hooks: useListClanContacts() (query), useCreateClanContact mutation, useUpdateClanContact mutation, useDeleteClanContact mutation, useSubmitHelpRequest mutation, useListHelpRequests() (query), useUpdateHelpRequestStatus mutation, useDeleteHelpRequest mutation, useListDonationChannels() (query), useCreateDonationChannel mutation, useUpdateDonationChannel mutation, useDeleteDonationChannel mutation. Each mutation's mutationFn must await the actor call and handle the #ok / #err Candid variant, throwing on #err.",
+      "reqIds": [
+        "REQ-46"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-a-new-frontend-component-frontend-src-components-contactclan-tsx-implementing-the-contact-the-clan-section-the-component-must-be-divided-into-four-clearly-labelled-sub-sections-1-clan-leader-contacts-display-a-list-of-contacts-where-contacttype-leader-showing-name-role-phone-email-wechat-address-and-notes-provide-an-add-contact-form-name-role-phone-email-wechat-address-notes-gated-behind-the-existing-uploadpasscodemodal-passcode-dsjzscxx-allow-editing-and-deleting-contacts-deletes-gated-behind-the-existing-deletepasscodemodal-passcode-dsjzyyxw3344-2-clan-group-contacts-same-as-above-but-for-contacttype-group-3-family-help-request-display-a-public-submission-form-with-fields-applicant-name-text-contact-info-text-request-type-dropdown-emergency-assistance-financial-help-medical-help-other-and-description-textarea-any-visitor-can-submit-a-help-request-no-passcode-required-for-submission-display-a-read-only-list-of-submitted-requests-visible-to-all-showing-applicant-name-request-type-description-status-and-date-deleting-a-request-is-gated-behind-deletepasscodemodal-4-donation-channels-display-all-configured-donation-channels-showing-channel-name-account-name-account-number-bank-name-wechat-pay-qr-info-alipay-qr-info-and-instructions-provide-an-add-channel-form-gated-behind-uploadpasscodemodal-allow-editing-and-deleting-channels-deletes-gated-behind-deletepasscodemodal-apply-the-existing-traditional-chinese-heritage-visual-theme-parchment-tones-ink-typography-seal-red-accents-consistently-throughout",
+      "title": "Create a new frontend component frontend/src/components/ContactClan.tsx implementing the 'Contact the Clan' (联系家族) section. The component must be divided into four clearly labelled sub-sections: (1) Clan Leader Contacts (族长联系方式): Display a list of contacts where contactType === 'leader', showing name, role, phone, email, wechat, address, and notes. Provide an 'Add Contact' form (name, role, phone, email, wechat, address, notes) gated behind the existing UploadPasscodeModal (passcode: 'dsjzscxx'). Allow editing and deleting contacts; deletes gated behind the existing DeletePasscodeModal (passcode: 'dsjzyyxw3344'). (2) Clan Group Contacts (族群联系方式): Same as above but for contactType === 'group'. (3) Family Help Request (家族求助申请): Display a public submission form with fields: Applicant Name (text), Contact Info (text), Request Type (dropdown: Emergency Assistance / Financial Help / Medical Help / Other), and Description (textarea). Any visitor can submit a help request — no passcode required for submission. Display a read-only list of submitted requests (visible to all, showing applicant name, request type, description, status, and date). Deleting a request is gated behind DeletePasscodeModal. (4) Donation Channels (家族捐赠渠道): Display all configured donation channels showing channel name, account name, account number, bank name, WeChat Pay QR info, Alipay QR info, and instructions. Provide an 'Add Channel' form gated behind UploadPasscodeModal. Allow editing and deleting channels; deletes gated behind DeletePasscodeModal. Apply the existing traditional Chinese heritage visual theme (parchment tones, ink typography, seal-red accents) consistently throughout.",
+      "reqIds": [
+        "REQ-47"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-fifth-navigation-section-contact-the-clan-to-the-application-update-frontend-src-components-layout-tsx-to-add-a-fifth-navigation-item-labelled-contact-the-clan-alongside-the-existing-four-sections-update-frontend-src-app-tsx-to-handle-the-new-section-state-e-g-contact-rendering-the-contactclan-component-when-this-section-is-active-the-new-section-must-be-reachable-from-the-navigation-bar-and-must-apply-the-same-traditional-chinese-heritage-visual-theme-as-the-other-sections",
+      "title": "Add a fifth navigation section 'Contact the Clan' (联系家族) to the application. Update frontend/src/components/Layout.tsx to add a fifth navigation item labelled 'Contact the Clan / 联系家族' alongside the existing four sections. Update frontend/src/App.tsx to handle the new section state (e.g., 'contact'), rendering the ContactClan component when this section is active. The new section must be reachable from the navigation bar and must apply the same traditional Chinese heritage visual theme as the other sections.",
+      "reqIds": [
+        "REQ-48"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-audit-and-fix-the-usecreateclancontact-useupdateclancontact-usecreatedonationchannel-useupdatedonationchannel-and-usesubmithelprequest-mutation-hooks-in-frontend-src-hooks-usequeries-ts-ensure-each-mutationfn-correctly-calls-the-corresponding-actor-method-awaits-the-result-and-decodes-the-returned-candid-variant-ok-err-if-the-actor-returns-a-variant-the-hook-must-check-for-ok-and-throw-an-error-on-err-so-react-query-surfaces-the-failure-remove-any-unhandled-promise-patterns-or-missing-await-calls-that-would-cause-silent-failures-where-the-submission-appears-to-succeed-but-no-data-is-persisted",
+      "title": "Audit and fix the useCreateClanContact, useUpdateClanContact, useCreateDonationChannel, useUpdateDonationChannel, and useSubmitHelpRequest mutation hooks in frontend/src/hooks/useQueries.ts. Ensure each mutationFn correctly calls the corresponding actor method, awaits the result, and decodes the returned Candid variant (#ok / #err). If the actor returns a variant, the hook must check for #ok and throw an Error on #err so React Query surfaces the failure. Remove any unhandled promise patterns or missing await calls that would cause silent failures where the submission appears to succeed but no data is persisted.",
+      "reqIds": [
+        "REQ-50"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-after-each-successful-create-update-mutation-in-contactclan-tsx-createclancontact-updateclancontact-deleteclancontact-createdonationchannel-updatedonationchannel-deletedonationchannel-submithelprequest-updatehelprequeststatus-deletehelprequest-invalidate-the-corresponding-react-query-cache-keys-e-g-clancontacts-donationchannels-helprequests-so-that-the-ui-re-fetches-and-displays-the-newly-saved-data-immediately-without-requiring-a-manual-page-refresh",
+      "title": "After each successful create/update mutation in ContactClan.tsx (createClanContact, updateClanContact, deleteClanContact, createDonationChannel, updateDonationChannel, deleteDonationChannel, submitHelpRequest, updateHelpRequestStatus, deleteHelpRequest), invalidate the corresponding React Query cache keys (e.g., 'clanContacts', 'donationChannels', 'helpRequests') so that the UI re-fetches and displays the newly saved data immediately without requiring a manual page refresh.",
+      "reqIds": [
+        "REQ-51"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-the-family-history-section-save-flow-the-save-button-in-familyhistory-tsx-must-gate-the-save-operation-behind-the-existing-uploadpasscodemodal-passcode-dsjzscxx-upon-correct-passcode-entry-call-the-updatefamilyhistory-backend-mutation-await-the-result-decode-the-returned-candid-variant-ok-err-and-display-a-success-confirmation-or-surface-the-error-the-updated-content-must-be-persisted-to-the-backend-so-that-it-is-visible-on-the-next-page-load-invalidate-the-react-query-cache-key-for-the-family-history-query-after-a-successful-save-so-the-ui-reflects-the-new-content-immediately",
+      "title": "Fix the Family History section save flow: the 'Save' button in FamilyHistory.tsx must gate the save operation behind the existing UploadPasscodeModal (passcode: 'dsjzscxx'). Upon correct passcode entry, call the updateFamilyHistory backend mutation, await the result, decode the returned Candid variant (#ok / #err), and display a success confirmation or surface the error. The updated content must be persisted to the backend so that it is visible on the next page load. Invalidate the React Query cache key for the family history query after a successful save so the UI reflects the new content immediately.",
+      "reqIds": [
+        "REQ-53"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-helprequest-typescript-type-in-frontend-src-hooks-usequeries-ts-to-include-an-optional-adminnote-field-adminnote-string-add-a-useaddhelprequestnote-mutation-hook-whose-mutationfn-calls-the-actor-s-addhelprequestnote-method-with-the-request-id-and-note-string-awaits-the-result-decodes-the-returned-ok-err-candid-variant-and-throws-an-error-on-err-after-a-successful-call-invalidate-the-helprequests-react-query-cache-key",
+      "title": "Update the HelpRequest TypeScript type in frontend/src/hooks/useQueries.ts to include an optional adminNote field (adminNote?: string). Add a useAddHelpRequestNote mutation hook whose mutationFn calls the actor's addHelpRequestNote method with the request id and note string, awaits the result, decodes the returned #ok / #err Candid variant, and throws an Error on #err. After a successful call, invalidate the 'helpRequests' React Query cache key.",
+      "reqIds": [
+        "REQ-57"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-family-help-request-sub-section-in-frontend-src-components-contactclan-tsx-so-that-the-list-of-submitted-help-requests-is-visible-to-all-visitors-without-any-admin-gate-each-request-row-must-display-applicant-name-request-type-description-status-submission-date-and-the-adminnote-if-present-add-an-inline-add-note-button-on-each-request-row-that-opens-a-small-inline-form-or-modal-with-a-textarea-for-entering-a-note-submitting-the-note-must-be-gated-behind-the-existing-uploadpasscodemodal-passcode-dsjzscxx-on-correct-passcode-entry-call-the-useaddhelprequestnote-mutation-to-persist-the-note-invalidate-the-helprequests-cache-on-success-so-the-note-appears-immediately",
+      "title": "Update the Family Help Request (家族求助申请) sub-section in frontend/src/components/ContactClan.tsx so that the list of submitted help requests is visible to all visitors without any admin gate. Each request row must display applicant name, request type, description, status, submission date, and the adminNote (if present). Add an inline 'Add Note' button on each request row that opens a small inline form (or modal) with a textarea for entering a note. Submitting the note must be gated behind the existing UploadPasscodeModal (passcode: 'dsjzscxx'). On correct passcode entry, call the useAddHelpRequestNote mutation to persist the note; invalidate the helpRequests cache on success so the note appears immediately.",
+      "reqIds": [
+        "REQ-58"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-audit-and-fix-all-mutation-hooks-in-frontend-src-hooks-usequeries-ts-createperson-updateperson-deleteperson-uploadmanuscript-deletemanuscript-addpersonmedia-updatepersonphoto-addrelationship-deleterelationship-createpost-addreply-deletepost-deletereply-createactivity-updateactivity-deleteactivity-uploadactivityimage-deleteactivityimage-createclancontact-updateclancontact-deleteclancontact-createdonationchannel-updatedonationchannel-deletedonationchannel-submithelprequest-updatehelprequeststatus-deletehelprequest-addhelprequestnote-updatefamilyhistory-each-mutationfn-must-1-await-the-actor-call-2-check-for-the-ok-arm-of-the-returned-candid-variant-and-3-throw-an-error-with-the-err-message-so-react-query-surfaces-failures-correctly-remove-any-fire-and-forget-or-unhandled-promise-patterns",
+      "title": "Audit and fix all mutation hooks in frontend/src/hooks/useQueries.ts (createPerson, updatePerson, deletePerson, uploadManuscript, deleteManuscript, addPersonMedia, updatePersonPhoto, addRelationship, deleteRelationship, createPost, addReply, deletePost, deleteReply, createActivity, updateActivity, deleteActivity, uploadActivityImage, deleteActivityImage, createClanContact, updateClanContact, deleteClanContact, createDonationChannel, updateDonationChannel, deleteDonationChannel, submitHelpRequest, updateHelpRequestStatus, deleteHelpRequest, addHelpRequestNote, updateFamilyHistory). Each mutationFn must: (1) await the actor call, (2) check for the #ok arm of the returned Candid variant, and (3) throw an Error with the #err message so React Query surfaces failures correctly. Remove any fire-and-forget or unhandled promise patterns.",
+      "reqIds": [
+        "REQ-61"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-after-every-successful-mutation-in-ancientmanuscripts-tsx-familyhistory-tsx-personform-tsx-personprofile-tsx-peopledirectory-tsx-claninteraction-tsx-familyactivities-tsx-and-contactclan-tsx-invalidate-the-corresponding-react-query-cache-keys-so-the-ui-re-fetches-and-immediately-reflects-the-new-data-without-requiring-a-manual-page-refresh-cache-keys-to-invalidate-must-match-those-used-by-the-corresponding-query-hooks-e-g-manuscripts-familyhistory-persons-relationships-posts-replies-activities-activityimages-clancontacts-donationchannels-helprequests",
+      "title": "After every successful mutation in AncientManuscripts.tsx, FamilyHistory.tsx, PersonForm.tsx, PersonProfile.tsx, PeopleDirectory.tsx, ClanInteraction.tsx, FamilyActivities.tsx, and ContactClan.tsx, invalidate the corresponding React Query cache keys so the UI re-fetches and immediately reflects the new data without requiring a manual page refresh. Cache keys to invalidate must match those used by the corresponding query hooks (e.g., 'manuscripts', 'familyHistory', 'persons', 'relationships', 'posts', 'replies', 'activities', 'activityImages', 'clanContacts', 'donationChannels', 'helpRequests').",
+      "reqIds": [
+        "REQ-62"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-the-helprequest-typescript-type-in-frontend-src-hooks-usequeries-ts-and-the-corresponding-contactclan-tsx-component-to-include-the-optional-adminnote-field-ensure-the-useaddhelprequestnote-mutation-hook-calls-the-actor-s-addhelprequestnote-method-awaits-the-result-decodes-the-ok-err-variant-throws-on-err-and-invalidates-the-helprequests-cache-key-on-success-in-contactclan-tsx-display-the-adminnote-on-each-help-request-row-when-present-and-provide-an-inline-add-note-form-gated-behind-the-uploadpasscodemodal-passcode-dsjzscxx",
+      "title": "Fix the HelpRequest TypeScript type in frontend/src/hooks/useQueries.ts and the corresponding ContactClan.tsx component to include the optional adminNote field. Ensure the useAddHelpRequestNote mutation hook calls the actor's addHelpRequestNote method, awaits the result, decodes the #ok / #err variant, throws on #err, and invalidates the 'helpRequests' cache key on success. In ContactClan.tsx, display the adminNote on each help request row when present, and provide an inline 'Add Note' form gated behind the UploadPasscodeModal (passcode: 'dsjzscxx').",
+      "reqIds": [
+        "REQ-63"
+      ],
+      "version": 1
     }
   ],
-  "new_feature_requests": [],
-  "projectName": "Change '确认' button text color to black",
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "访问口令保护登录页面，口令为 dsjzsdxw，错误则拒绝访问",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "家族古籍缩影板块：支持上传家族老族谱的电子扫描版本（图片/PDF）",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "家族历史板块：支持富文本/文字内容编辑与展示",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "人物整理板块：每个人物可设置代数、父亲、母亲、兄弟、子女关系，上传照片和影视资料，并填写个人介绍",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-6",
+      "summary": "Create a backend data model and API for the Ancient Manuscripts (家族古籍缩影) section. Support storing uploaded genealogy scan files (images and PDFs) as binary blobs with metadata including file name, upload date, and description. Provide endpoints to upload, list, retrieve, and delete manuscript entries.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-8",
+      "summary": "Create a backend data model and API for the Family History (家族历史) section. Support storing rich text content as a single editable document (or multiple named articles). Provide endpoints to read and update the family history content.",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-10",
+      "summary": "Create a backend data model and API for the People Directory (人物整理) section. Each person record must include: full name, generation number (代数), father (reference to another person or free-text name), mother (reference or free-text), siblings list, children list, a text biography/introduction, a profile photo blob, and a list of media file blobs (photos and video files) with filenames. Provide CRUD endpoints for person records.",
+      "reqIds": [
+        "REQ-6"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-11",
+      "summary": "上传信息需要提供口令 dsjzscxx，删除信息需要提供口令 dsjzyyxw3344，两个操作分别有独立口令验证",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-12",
+      "summary": "Rebuild and restore the complete backend Motoko actor in backend/main.mo, including all previously implemented APIs: Ancient Manuscripts (upload, list, get, delete), Family History (get, update), and People Directory (create, read, update, delete, add/remove media, siblings, children). Ensure all data models and stable storage are intact.",
+      "reqIds": [
+        "REQ-11"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-13",
+      "summary": "扩展族人数据模型，新增字段：性别（gender）、出生日期（birth_date）、去世日期（death_date）、国家（country）、省份（province）、城市（city）、民族/国籍（nationality），并更新相关后端API和前端表单",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-14",
+      "summary": "Extend the Person data model in the backend (backend/main.mo) to include the following new optional fields: gender (text), birth_date (text, ISO date string), death_date (text, ISO date string), country (text), province (text), city (text), and nationality (text). Update the createPerson and updatePerson Candid-typed functions to accept and persist these new fields. Ensure existing records remain valid (all new fields are optional/nullable).",
+      "reqIds": [
+        "REQ-18"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-15",
+      "summary": "在族人档案中增加关系类型表（relationship_types），包含：父亲（反向：子女）、母亲（反向：子女）、丈夫（反向：妻子）、妻子（反向：丈夫）、兄弟（反向：兄弟）、姐妹（反向：姐妹）",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-16",
+      "summary": "增加关系表（relationships），字段包含：id、person1_id、person2_id、relationship_type_id、created_at。添加关系时自动生成双向记录（如A是B的父亲，则同时生成B是A的子女）",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-17",
+      "summary": "代数计算改为动态递归计算：不存储固定代数字段，无父亲或母亲关系的人为第一代，子代代数=父代代数+1，支持无限新增人物",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-18",
+      "summary": "Add a relationship types data structure to the backend (backend/main.mo) containing exactly six predefined types: Father (inverse: Child), Mother (inverse: Child), Husband (inverse: Wife), Wife (inverse: Husband), Brother (inverse: Brother), Sister (inverse: Sister). Each relationship type must store its name and its inverse type reference. These types must be hardcoded/seeded as stable constants — no CRUD endpoints are needed for relationship types themselves.",
+      "reqIds": [
+        "REQ-22"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-19",
+      "summary": "Add a relationships table to the backend (backend/main.mo) with fields: id (Nat, auto-incremented), person1Id (Text, references a person record), person2Id (Text, references a person record), relationshipType (Text, one of the six predefined types), and createdAt (Int, timestamp). Implement an addRelationship update function that accepts person1Id, person2Id, and relationshipType, then automatically creates two records: the forward relationship (person1 → person2 with the given type) and the inverse relationship (person2 → person1 with the computed inverse type). Implement a getRelationships query that accepts a personId and returns all relationship records where that person is person1Id. Implement a deleteRelationship update function that accepts a relationship id and removes both the forward and its paired inverse record.",
+      "reqIds": [
+        "REQ-23"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-20",
+      "summary": "Audit and fix the 'Expected v3 response body' error that occurs during file upload operations (manuscript uploads and person media uploads). Inspect all backend update functions in backend/main.mo that handle binary blob uploads — specifically uploadManuscript, addPersonMedia, and updatePersonPhoto — and ensure their Candid return types are explicitly declared as Result or a properly typed variant (e.g., #ok / #err) rather than returning untyped or implicitly inferred responses. Ensure no upload function returns a bare value without a typed Candid annotation.",
+      "reqIds": [
+        "REQ-28"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-21",
+      "summary": "移除上传操作的管理员限制，所有用户均可上传（古籍文件、族人照片、族人媒体文件、新建族人记录），仅需通过上传口令 dsjzscxx 验证即可",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-22",
+      "summary": "Remove any admin-only or role-based access control checks from all backend upload functions in backend/main.mo. The functions uploadManuscript, addPersonMedia, updatePersonPhoto, and createPerson must be callable by any authenticated or unauthenticated user — no admin token, admin principal, or role check should gate these operations. The only upload authorization that remains is the frontend-side upload passcode modal (passcode: 'dsjzscxx'), which is already enforced in the UI.",
+      "reqIds": [
+        "REQ-30"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-23",
+      "summary": "Ensure the frontend upload passcode modal (passcode: 'dsjzscxx') remains the only gate before upload operations — manuscript file uploads, person profile photo uploads, person media file uploads, and new person record creation — and that no additional frontend-side admin check or token requirement is applied beyond this modal.",
+      "reqIds": [
+        "REQ-31"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-24",
+      "summary": "在关系类型下拉选择中增加子女（Child）选项，使用户可以选择子女关系类型",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-25",
+      "summary": "Investigate and resolve the IC0508 'Canister is stopped' error that occurs when calling the createPerson method on canister haf5u-eyaaa-aaaan-q3iza-cai. Audit the backend/main.mo actor to ensure there are no runtime traps, unhandled errors, or infinite loops in the createPerson function or any function it calls (e.g., stable variable initialization, pre/post upgrade hooks) that could cause the canister to stop. Fix any code path that causes the canister to halt so that createPerson and all other update calls complete successfully without the canister entering a stopped state.",
+      "reqIds": [
+        "REQ-33"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-26",
+      "summary": "After fixing the IC0508 issue, perform a smoke-test pass on all backend update functions (createPerson, updatePerson, uploadManuscript, addPersonMedia, updatePersonPhoto, addRelationship, deleteRelationship, deleteManuscript, deletePerson, updateFamilyHistory) to confirm each one returns a properly typed Candid response variant (#ok / #err) and does not cause the canister to stop or trap under normal usage.",
+      "reqIds": [
+        "REQ-34"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-27",
+      "summary": "新增第四板块「族人互动」：支持族人留言发帖功能，其他人可在帖子下方回复留言",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-28",
+      "summary": "新增「家族活动安排表」功能：支持创建家族活动条目（活动名称、时间、描述），并支持上传活动图片",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-29",
+      "summary": "Extend the backend Motoko actor (backend/main.mo) with a message board (clan interaction) data model. Add a Post record type with fields: id (Nat, auto-incremented), authorName (Text), content (Text), createdAt (Int, timestamp). Add a Reply record type with fields: id (Nat, auto-incremented), postId (Nat, references a Post), authorName (Text), content (Text), createdAt (Int, timestamp). Implement the following functions: createPost (update, accepts authorName and content, returns #ok(Post) / #err(Text)), listPosts (query, returns all Posts sorted by createdAt descending), addReply (update, accepts postId, authorName, content, returns #ok(Reply) / #err(Text)), listReplies (query, accepts postId, returns all Replies for that post sorted by createdAt ascending), deletePost (update, accepts post id, deletes post and all its replies, returns #ok() / #err(Text)), deleteReply (update, accepts reply id, returns #ok() / #err(Text)). All data must be stored in stable variables.",
+      "reqIds": [
+        "REQ-35"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-30",
+      "summary": "Extend the backend Motoko actor (backend/main.mo) with a Family Activities data model. Add an Activity record type with fields: id (Nat, auto-incremented), title (Text), eventDate (Text, ISO date string), description (Text), createdAt (Int, timestamp). Add an ActivityImage record type with fields: id (Nat, auto-incremented), activityId (Nat), fileName (Text), mimeType (Text), data (Blob), uploadedAt (Int, timestamp). Implement the following functions: createActivity (update, accepts title, eventDate, description, returns #ok(Activity) / #err(Text)), listActivities (query, returns all Activities sorted by eventDate ascending), getActivity (query, accepts activity id, returns #ok(Activity) / #err(Text)), updateActivity (update, accepts id, title, eventDate, description, returns #ok(Activity) / #err(Text)), deleteActivity (update, accepts id, deletes activity and all associated images, returns #ok() / #err(Text)), uploadActivityImage (update, accepts activityId, fileName, mimeType, data Blob, returns #ok(ActivityImage) / #err(Text)), listActivityImages (query, accepts activityId, returns all ActivityImage records for that activity), deleteActivityImage (update, accepts image id, returns #ok() / #err(Text)). All data must be stored in stable variables.",
+      "reqIds": [
+        "REQ-36"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-31",
+      "summary": "Fix 'Unauthorized: Only users can create activities' error when creating family activities. Remove or bypass the user-only authorization check in the createActivity backend function so any caller (authenticated or not) can create activities, consistent with the project's passcode-only authorization model.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-32",
+      "summary": "Remove or bypass any user-authentication/authorization check in the createActivity backend function in backend/main.mo so that any caller (authenticated or unauthenticated) can invoke createActivity without receiving an 'Unauthorized: Only users can create activities' error. This is consistent with the project's passcode-only authorization model where backend functions do not enforce caller identity — authorization is handled exclusively via the frontend upload passcode modal (passcode: 'dsjzscxx'). Apply the same removal to all other Family Activities mutating functions (updateActivity, deleteActivity, uploadActivityImage, deleteActivityImage) if they contain equivalent user-only guards.",
+      "reqIds": [
+        "REQ-42"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-33",
+      "summary": "Fix 'Unauthorized: Only users can create posts' error when creating clan message board posts. Remove or bypass the user-only authorization check in the createPost backend function (and likely addReply, deletePost, deleteReply) so any caller can invoke these functions, consistent with the project's passcode-only authorization model.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-34",
+      "summary": "Remove or bypass any user-authentication/authorization check in the createPost backend function in backend/main.mo so that any caller (authenticated or unauthenticated) can invoke createPost without receiving an 'Unauthorized: Only users can create posts' error. This is consistent with the project's passcode-only authorization model where backend functions do not enforce caller identity.",
+      "reqIds": [
+        "REQ-43"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-35",
+      "summary": "Remove or bypass any equivalent user-authentication/authorization checks in the addReply, deletePost, and deleteReply backend functions in backend/main.mo, ensuring all message board mutating functions are callable by any caller without authorization errors, consistent with the project's passcode-only authorization model.",
+      "reqIds": [
+        "REQ-44"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-36",
+      "summary": "新增第五板块「联系家族」：包含族长联系方式展示、族群联系方式展示、家族求助申请表单、家族捐赠渠道信息",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-37",
+      "summary": "Extend the backend Motoko actor (backend/main.mo) with data models and APIs for the 'Contact the Clan' (联系家族) section. Add a ClanContact record type with fields: id (Nat, auto-incremented), contactType (Text, e.g. 'leader' or 'group'), name (Text), role (Text), phone (Text, optional), email (Text, optional), wechat (Text, optional), address (Text, optional), notes (Text, optional), createdAt (Int, timestamp). Implement: createClanContact (update, returns #ok(ClanContact) / #err(Text)), updateClanContact (update, returns #ok(ClanContact) / #err(Text)), deleteClanContact (update, returns #ok() / #err(Text)), listClanContacts (query, returns all contacts), getClanContact (query, by id). Add a HelpRequest record type with fields: id (Nat, auto-incremented), applicantName (Text), contactInfo (Text), requestType (Text), description (Text), status (Text, default 'pending'), createdAt (Int, timestamp). Implement: submitHelpRequest (update, accepts applicantName, contactInfo, requestType, description, returns #ok(HelpRequest) / #err(Text)), listHelpRequests (query, returns all requests sorted by createdAt descending), updateHelpRequestStatus (update, accepts id and status, returns #ok() / #err(Text)), deleteHelpRequest (update, returns #ok() / #err(Text)). Add a DonationChannel record type with fields: id (Nat, auto-incremented), channelName (Text), accountName (Text, optional), accountNumber (Text, optional), bankName (Text, optional), wechatPayQr (Text, optional, base64 or description), alipayQr (Text, optional), instructions (Text, optional), createdAt (Int, timestamp). Implement: createDonationChannel (update, returns #ok(DonationChannel) / #err(Text)), updateDonationChannel (update, returns #ok(DonationChannel) / #err(Text)), deleteDonationChannel (update, returns #ok() / #err(Text)), listDonationChannels (query, returns all channels). All data must be stored in stable variables. No caller authentication/authorization checks — consistent with the project's passcode-only model.",
+      "reqIds": [
+        "REQ-45"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-38",
+      "summary": "Remove or bypass the admin-only authorization check in the createPerson backend function in backend/main.mo so any caller can invoke createPerson without receiving 'Unauthorized: Only admins can create persons'. Apply the same removal to updatePerson and deletePerson if they contain equivalent admin-only guards, consistent with the project's passcode-only authorization model.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-39",
+      "summary": "Remove or bypass the admin-only authorization check in the createPerson backend function in backend/main.mo so any caller (authenticated or unauthenticated) can invoke createPerson without receiving 'Unauthorized: Only admins can create persons'. Apply the same removal to updatePerson and deletePerson if they contain equivalent admin-only guards, consistent with the project's passcode-only authorization model where backend functions do not enforce caller identity.",
+      "reqIds": [
+        "REQ-49"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-42",
+      "summary": "Audit the backend/main.mo functions createClanContact, updateClanContact, deleteClanContact, createDonationChannel, updateDonationChannel, deleteDonationChannel, submitHelpRequest, updateHelpRequestStatus, and deleteHelpRequest to confirm they have no caller authentication or authorization checks (admin-only or user-only guards) that would silently reject calls from an unauthenticated caller. If any such guard exists, remove it, consistent with the project's passcode-only authorization model.",
+      "reqIds": [
+        "REQ-52"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-43",
+      "summary": "修复家族历史板块保存内容失败的问题：保存操作应通过上传口令验证（dsjzscxx）后调用后端更新函数并成功持久化内容",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-44",
+      "summary": "Remove admin-only authorization check from the uploadManuscript backend function so any caller can upload manuscripts without receiving 'Unauthorized: Only admins can upload manuscripts', consistent with the project's passcode-only authorization model.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-45",
+      "summary": "家族求助申请列表对所有人可见（无需管理员权限），并新增批注帮扶情况功能（管理员或任何人可在申请记录上添加帮扶批注/备注）",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-47",
+      "summary": "Audit the updateFamilyHistory function in backend/main.mo to ensure it has no admin-only or user-only authorization check that would reject calls from an unauthenticated caller. If any such guard exists, remove it, consistent with the project's passcode-only authorization model. Verify the function's Candid return type is a properly typed variant (#ok(Text) / #err(Text)) so the frontend can correctly decode the response.",
+      "reqIds": [
+        "REQ-54"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-48",
+      "summary": "Remove the admin-only authorization check from the uploadManuscript function in backend/main.mo so that any caller (authenticated or unauthenticated) can invoke uploadManuscript without receiving 'Unauthorized: Only admins can upload manuscripts'. This is consistent with the project's passcode-only authorization model where backend functions do not enforce caller identity.",
+      "reqIds": [
+        "REQ-55"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-49",
+      "summary": "Update the backend/main.mo HelpRequest data model to add an optional 'adminNote' field (Text, nullable/optional) to the HelpRequest record type. Add a new update function addHelpRequestNote(id: Nat, note: Text) that accepts a help request id and a note string, sets or updates the adminNote field on the matching record, and returns #ok() / #err(Text). All existing HelpRequest records must remain valid — the new field is optional and defaults to empty/null.",
+      "reqIds": [
+        "REQ-56"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-50",
+      "summary": "Audit the entire backend/main.mo actor and remove every admin-only and user-only authorization guard from all mutating functions (createPerson, updatePerson, deletePerson, uploadManuscript, deleteManuscript, addPersonMedia, updatePersonPhoto, createPost, addReply, deletePost, deleteReply, createActivity, updateActivity, deleteActivity, uploadActivityImage, deleteActivityImage, createClanContact, updateClanContact, deleteClanContact, createDonationChannel, updateDonationChannel, deleteDonationChannel, submitHelpRequest, updateHelpRequestStatus, deleteHelpRequest, addHelpRequestNote, updateFamilyHistory). No function may reject a call based on caller principal or role. Authorization is handled exclusively by the frontend passcode modals.",
+      "reqIds": [
+        "REQ-59"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-51",
+      "summary": "Ensure every backend update function in backend/main.mo that returns a result has an explicit Candid-typed return signature of the form Result<T, Text> or a typed variant (#ok(T) / #err(Text)). Functions must not return bare untyped values. Specifically verify: createPerson, updatePerson, deletePerson, uploadManuscript, deleteManuscript, addPersonMedia, updatePersonPhoto, addRelationship, deleteRelationship, createPost, addReply, deletePost, deleteReply, createActivity, updateActivity, deleteActivity, uploadActivityImage, deleteActivityImage, createClanContact, updateClanContact, deleteClanContact, createDonationChannel, updateDonationChannel, deleteDonationChannel, submitHelpRequest, updateHelpRequestStatus, deleteHelpRequest, addHelpRequestNote, updateFamilyHistory.",
+      "reqIds": [
+        "REQ-60"
+      ],
+      "status": "pending"
+    }
+  ],
+  "gameProjectType": "none",
+  "projectName": "邓氏家族族谱系统",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

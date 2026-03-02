@@ -1,34 +1,102 @@
 {
   "kind": "build_request",
-  "title": "Change '确认' button text color to black",
-  "priority": "normal",
+  "title": "Retry latest failing build — stabilize backend and frontend",
+  "projectName": "邓氏家族族谱",
+  "priority": "high",
   "requirements": [
     {
-      "id": "REQ-1",
-      "text": "Change the text color of all '确认' (Confirm) buttons throughout the application to black (#000000 or text-black).",
-      "target": "frontend",
+      "id": "REQ-59",
+      "text": "Audit the entire backend/main.mo actor and remove every admin-only and user-only authorization guard from all mutating functions (createPerson, updatePerson, deletePerson, uploadManuscript, deleteManuscript, addPersonMedia, updatePersonPhoto, createPost, addReply, deletePost, deleteReply, createActivity, updateActivity, deleteActivity, uploadActivityImage, deleteActivityImage, createClanContact, updateClanContact, deleteClanContact, createDonationChannel, updateDonationChannel, deleteDonationChannel, submitHelpRequest, updateHelpRequestStatus, deleteHelpRequest, addHelpRequestNote, updateFamilyHistory). No function may reject a call based on caller principal or role. Authorization is handled exclusively by the frontend passcode modals.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-latest"
+          "msg-1"
         ],
         "quotes": [
-          "把：确认 这个字改成黑色"
+          "继续尝试"
         ]
       },
       "acceptanceCriteria": [
-        "All '确认' button labels render in black text across every modal and form in the application.",
-        "The change applies consistently in UploadPasscodeModal, DeletePasscodeModal, and any other component containing a '确认' button.",
-        "No other button styles or colors are affected."
+        "Calling createPerson, createActivity, createPost, addReply, uploadManuscript, createClanContact, createDonationChannel, submitHelpRequest, updateFamilyHistory, and all related delete/update functions from an anonymous principal returns #ok(...) rather than an 'Unauthorized' error.",
+        "No function in backend/main.mo contains a check against caller identity, admin principals, or user roles."
+      ]
+    },
+    {
+      "id": "REQ-60",
+      "text": "Ensure every backend update function in backend/main.mo that returns a result has an explicit Candid-typed return signature of the form Result<T, Text> or a typed variant (#ok(T) / #err(Text)). Functions must not return bare untyped values. Specifically verify: createPerson, updatePerson, deletePerson, uploadManuscript, deleteManuscript, addPersonMedia, updatePersonPhoto, addRelationship, deleteRelationship, createPost, addReply, deletePost, deleteReply, createActivity, updateActivity, deleteActivity, uploadActivityImage, deleteActivityImage, createClanContact, updateClanContact, deleteClanContact, createDonationChannel, updateDonationChannel, deleteDonationChannel, submitHelpRequest, updateHelpRequestStatus, deleteHelpRequest, addHelpRequestNote, updateFamilyHistory.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ]
+      },
+      "acceptanceCriteria": [
+        "All listed update functions have explicit return type annotations in their Motoko signatures.",
+        "No function returns an implicit or bare value that would cause a Candid decoding mismatch on the frontend."
+      ]
+    },
+    {
+      "id": "REQ-61",
+      "text": "Audit and fix all mutation hooks in frontend/src/hooks/useQueries.ts (createPerson, updatePerson, deletePerson, uploadManuscript, deleteManuscript, addPersonMedia, updatePersonPhoto, addRelationship, deleteRelationship, createPost, addReply, deletePost, deleteReply, createActivity, updateActivity, deleteActivity, uploadActivityImage, deleteActivityImage, createClanContact, updateClanContact, deleteClanContact, createDonationChannel, updateDonationChannel, deleteDonationChannel, submitHelpRequest, updateHelpRequestStatus, deleteHelpRequest, addHelpRequestNote, updateFamilyHistory). Each mutationFn must: (1) await the actor call, (2) check for the #ok arm of the returned Candid variant, and (3) throw an Error with the #err message so React Query surfaces failures correctly. Remove any fire-and-forget or unhandled promise patterns.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Every mutation hook awaits its actor call and handles both #ok and #err arms.",
+        "An #err response causes the mutation to enter error state and surfaces the error message to the UI.",
+        "No mutation silently succeeds without actually persisting data."
+      ]
+    },
+    {
+      "id": "REQ-62",
+      "text": "After every successful mutation in AncientManuscripts.tsx, FamilyHistory.tsx, PersonForm.tsx, PersonProfile.tsx, PeopleDirectory.tsx, ClanInteraction.tsx, FamilyActivities.tsx, and ContactClan.tsx, invalidate the corresponding React Query cache keys so the UI re-fetches and immediately reflects the new data without requiring a manual page refresh. Cache keys to invalidate must match those used by the corresponding query hooks (e.g., 'manuscripts', 'familyHistory', 'persons', 'relationships', 'posts', 'replies', 'activities', 'activityImages', 'clanContacts', 'donationChannels', 'helpRequests').",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ]
+      },
+      "acceptanceCriteria": [
+        "After a successful upload, the manuscript gallery updates immediately.",
+        "After saving family history, the updated text is visible without a page refresh.",
+        "After creating or deleting a person, the people directory list reflects the change immediately.",
+        "After adding or deleting a relationship, the relationships panel updates immediately.",
+        "After creating a post or reply, the message board list updates immediately.",
+        "After creating or editing an activity or uploading/deleting activity images, the activities list and detail view update immediately.",
+        "After any ContactClan mutation (contacts, donation channels, help requests), the relevant sub-section list updates immediately."
+      ]
+    },
+    {
+      "id": "REQ-63",
+      "text": "Fix the HelpRequest TypeScript type in frontend/src/hooks/useQueries.ts and the corresponding ContactClan.tsx component to include the optional adminNote field. Ensure the useAddHelpRequestNote mutation hook calls the actor's addHelpRequestNote method, awaits the result, decodes the #ok / #err variant, throws on #err, and invalidates the 'helpRequests' cache key on success. In ContactClan.tsx, display the adminNote on each help request row when present, and provide an inline 'Add Note' form gated behind the UploadPasscodeModal (passcode: 'dsjzscxx').",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The HelpRequest TypeScript type includes adminNote?: string.",
+        "The useAddHelpRequestNote mutation correctly calls the backend, handles the variant, and invalidates cache.",
+        "Each help request row in ContactClan.tsx shows the adminNote if present.",
+        "The 'Add Note' button opens an inline form; submitting requires the upload passcode 'dsjzscxx'; on success the note appears immediately."
       ]
     }
   ],
   "constraints": [
-    "Do not modify any files under frontend/src/hooks/ or frontend/src/components/ui.",
-    "Only change the text color of '确认' labels; do not alter button background, border, or other styles."
+    "Do not modify any file listed under frontend.immutablePaths.",
+    "All Motoko logic must remain in the single backend/main.mo actor.",
+    "Do not introduce any external databases, cloud services, or additional backend services.",
+    "Passcode validation (upload: 'dsjzscxx', delete: 'dsjzyyxw3344', gate: 'dsjzsdxw') must remain frontend-only; the backend must not enforce caller identity."
   ],
   "nonGoals": [
-    "Changing any other text or button colors beyond '确认'.",
-    "Modifying backend logic."
+    "Adding new features or sections beyond what is already specified.",
+    "Changing the visual theme or layout.",
+    "Migrating to a different tech stack.",
+    "Implementing real-time features or WebSockets."
   ],
   "imageRequirements": {
     "required": [],

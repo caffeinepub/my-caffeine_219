@@ -1,26 +1,98 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Change '确认' button text color to black",
+  "title": "Stabilize frontend mutation handling and cache invalidation",
   "requirements": [
     {
-      "id": "REQ-1",
-      "summary": "Change the text color of all '确认' (Confirm) buttons throughout the application to black (#000000 or text-black)",
+      "id": "REQ-61",
+      "summary": "Fix all mutation hooks in useQueries.ts to properly await actor calls, decode Candid Result variants (#ok/#err), and throw on errors so React Query surfaces failures correctly",
       "acceptanceCriteria": [
-        "All '确认' button labels render in black text across every modal and form in the application.",
-        "The change applies consistently in UploadPasscodeModal, DeletePasscodeModal, and any other component containing a '确认' button.",
-        "No other button styles or colors are affected."
+        "Every mutation hook awaits its actor call and handles both #ok and #err arms.",
+        "An #err response causes the mutation to enter error state and surfaces the error message to the UI.",
+        "No mutation silently succeeds without actually persisting data."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/UploadPasscodeModal.tsx",
+          "path": "frontend/src/hooks/useQueries.ts",
           "operation": "modify",
-          "description": "Modify the '确认' button in UploadPasscodeModal to apply text-black class or inline style color: '#000000' to the button text, ensuring the text renders in black while preserving all other button styles (background, border, padding, etc.)."
+          "description": "Audit and fix all mutation hooks (createPerson, updatePerson, deletePerson, uploadManuscript, deleteManuscript, addPersonMedia, updatePersonPhoto, addRelationship, deleteRelationship, createPost, addReply, deletePost, deleteReply, createActivity, updateActivity, deleteActivity, uploadActivityImage, deleteActivityImage, createClanContact, updateClanContact, deleteClanContact, createDonationChannel, updateDonationChannel, deleteDonationChannel, submitHelpRequest, updateHelpRequestStatus, deleteHelpRequest, addHelpRequestNote, updateFamilyHistory). For each mutationFn: (1) await the actor call, (2) check if the result is a Candid variant with #ok/#err arms (Result<T, Text>), (3) if #err, throw new Error with the error message, (4) if #ok, return the success value. For functions that already return Result variants per backend-interface.d.ts (e.g., createPerson returns Result<PersonId, void> in disguise, uploadManuscript returns Result<null, Text>), decode the variant properly. For functions without explicit Result returns (e.g., updatePerson, deletePerson, deleteRelationship, updateFamilyHistory), simply await and return. Remove any fire-and-forget patterns or unhandled promises."
+        }
+      ]
+    },
+    {
+      "id": "REQ-62",
+      "summary": "After every successful mutation in AncientManuscripts, FamilyHistory, PersonForm, PersonProfile, PeopleDirectory, ClanInteraction, FamilyActivities, and ContactClan, invalidate the corresponding React Query cache keys so the UI immediately reflects new data without manual refresh",
+      "acceptanceCriteria": [
+        "After a successful upload, the manuscript gallery updates immediately.",
+        "After saving family history, the updated text is visible without a page refresh.",
+        "After creating or deleting a person, the people directory list reflects the change immediately.",
+        "After adding or deleting a relationship, the relationships panel updates immediately.",
+        "After creating a post or reply, the message board list updates immediately.",
+        "After creating or editing an activity or uploading/deleting activity images, the activities list and detail view update immediately.",
+        "After any ContactClan mutation (contacts, donation channels, help requests), the relevant sub-section list updates immediately."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/AncientManuscripts.tsx",
+          "operation": "modify",
+          "description": "After successful uploadManuscript and deleteManuscript mutations, call queryClient.invalidateQueries({ queryKey: ['manuscripts'] }) to refresh the manuscript gallery immediately."
         },
         {
-          "path": "frontend/src/components/DeletePasscodeModal.tsx",
+          "path": "frontend/src/components/FamilyHistory.tsx",
           "operation": "modify",
-          "description": "Modify the '确认' button in DeletePasscodeModal to apply text-black class or inline style color: '#000000' to the button text, ensuring the text renders in black while preserving all other button styles (background, border, padding, etc.)."
+          "description": "After successful updateFamilyHistory mutation, call queryClient.invalidateQueries({ queryKey: ['familyHistory'] }) to refresh the displayed family history text immediately."
+        },
+        {
+          "path": "frontend/src/components/PersonForm.tsx",
+          "operation": "modify",
+          "description": "After successful createPerson mutation, call queryClient.invalidateQueries({ queryKey: ['persons'] }) to refresh the people directory list immediately. Also invalidate after updatePerson (if applicable in this component)."
+        },
+        {
+          "path": "frontend/src/components/PersonProfile.tsx",
+          "operation": "modify",
+          "description": "After successful addPersonMedia, updatePersonPhoto, addRelationship, deleteRelationship, or deletePerson mutations, invalidate the appropriate cache keys: ['persons'] for person data changes, ['relationships', personId] for relationship changes. Ensure the UI refreshes immediately after each mutation."
+        },
+        {
+          "path": "frontend/src/components/PeopleDirectory.tsx",
+          "operation": "modify",
+          "description": "After successful deletePerson mutation, call queryClient.invalidateQueries({ queryKey: ['persons'] }) to refresh the people directory list immediately."
+        },
+        {
+          "path": "frontend/src/components/ClanInteraction.tsx",
+          "operation": "modify",
+          "description": "After successful createPost, deletePost, addReply, or deleteReply mutations, invalidate the appropriate cache keys: ['posts'] for post list changes, ['replies', postId] for reply changes. Ensure the message board updates immediately."
+        },
+        {
+          "path": "frontend/src/components/FamilyActivities.tsx",
+          "operation": "modify",
+          "description": "After successful createActivity, updateActivity, deleteActivity, uploadActivityImage, or deleteActivityImage mutations, invalidate the appropriate cache keys: ['activities'] for activity list changes, ['activityImages', activityId] for image gallery changes. Ensure the activities list and detail view update immediately."
+        },
+        {
+          "path": "frontend/src/components/ContactClan.tsx",
+          "operation": "modify",
+          "description": "After successful mutations (createClanContact, updateClanContact, deleteClanContact, createDonationChannel, updateDonationChannel, deleteDonationChannel, submitHelpRequest, updateHelpRequestStatus, deleteHelpRequest, addHelpRequestNote), invalidate the corresponding cache keys: ['clanContacts'], ['donationChannels'], ['helpRequests']. Ensure each sub-section list updates immediately after its mutation."
+        }
+      ]
+    },
+    {
+      "id": "REQ-63",
+      "summary": "Fix HelpRequest TypeScript type to include optional adminNote field, implement useAddHelpRequestNote mutation hook, and display admin notes inline in ContactClan with passcode-gated 'Add Note' form",
+      "acceptanceCriteria": [
+        "The HelpRequest TypeScript type includes adminNote?: string.",
+        "The useAddHelpRequestNote mutation correctly calls the backend, handles the variant, and invalidates cache.",
+        "Each help request row in ContactClan.tsx shows the adminNote if present.",
+        "The 'Add Note' button opens an inline form; submitting requires the upload passcode 'dsjzscxx'; on success the note appears immediately."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Update the HelpRequest TypeScript type to include adminNote?: string. Implement a new useAddHelpRequestNote mutation hook that accepts (requestId: bigint, note: string), calls actor.addHelpRequestNote(requestId, note), awaits the result, decodes the #ok/#err Candid variant (throw Error on #err), and invalidates the ['helpRequests'] cache key on success."
+        },
+        {
+          "path": "frontend/src/components/ContactClan.tsx",
+          "operation": "modify",
+          "description": "In the help requests sub-section, display the adminNote field on each help request row when present. Add an 'Add Note' button for each request that opens an inline form (with a textarea for the note). Wrap the form submit with UploadPasscodeModal (passcode: 'dsjzscxx'). On successful submission, call the useAddHelpRequestNote mutation and invalidate the ['helpRequests'] cache so the note appears immediately."
         }
       ]
     }

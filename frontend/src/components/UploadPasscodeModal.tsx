@@ -88,7 +88,7 @@ export default function UploadPasscodeModal({
             <button
               type="submit"
               disabled={isLoading || !passcode}
-              className="flex items-center gap-2 px-4 py-2 bg-seal-600 text-black rounded text-sm font-medium hover:bg-seal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-seal-600 text-white rounded text-sm font-medium hover:bg-seal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isLoading ? (
                 <>
